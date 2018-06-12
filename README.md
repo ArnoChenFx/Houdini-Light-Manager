@@ -3,4 +3,6 @@
 
 Support Houdini 16.5
 
+install:https://vimeo.com/274637212
+
 Manager your Mantra/Arnold/Redshift Lights in Houdini
