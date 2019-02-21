@@ -1,0 +1,19 @@
+import sys
+
+mypath = "F:/Houdini_Project/ARNO_Plugins/light manager/ARNO_LightManager/LightManager"
+
+Path = mypath.replace('\\','/') + "/"
+sys.argv = Path[:-1]
+
+if Path not in sys.path:
+        sys.path.append(Path)
+        
+import LightManager
+
+reload(LightManager)
+LM.refreshWindow()
+
+this = hou.shelves.runningTool()
+if this.icon().count("AN_LM.tif")==0:
+        this.setIcon("%sicons/AN_LM.tif"%Path)
+        this.setLabel("LightManager")
