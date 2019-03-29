@@ -4,7 +4,8 @@
 Support Houdini 17.5
 
 
-AN_LightManager 文件夹放入 文档/houdini17.5/scripts/python
+
+AN_LightManager --> Documents/houdini17.5/scripts/python
 
 
-AN_LightManager.pypanel 放入 文档/houdini17.5/python_panels
+AN_LightManager.pypanel --> Documents/houdini17.5/python_panels
