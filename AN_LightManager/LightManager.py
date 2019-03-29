@@ -1203,7 +1203,6 @@ class LightMagager(QMainWindow):
 
     def onSetpath(self):
         path =  hou.ui.selectNode()
-
         if path:
             self.lightPath = path
             self.update()
