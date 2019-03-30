@@ -7,7 +7,7 @@
  in a single file. -->
   <interface name="ARNO Light Manager" label="ARNO Light Manager" icon="hicon:/SVGIcons.index?BUTTONS_add_light.svg" showNetworkNavigationBar="false" help_url="">
     <script><![CDATA[import AN_LightManager
-reload(AN_LightManager.LightManager)
+reload(AN_LightManager)
 from AN_LightManager.LightManager import LightMagager 
 
 def onCreateInterface():
