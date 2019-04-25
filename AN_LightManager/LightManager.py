@@ -1098,6 +1098,7 @@ class LightManagerWindow(QMainWindow):
 
         self.initAttribute()
         self.initUI()
+        self.setAutoRefresh(True)
         self.onLoad()
         self.update(True)
         self.lightCount = 0
@@ -1200,7 +1201,7 @@ class LightManagerWindow(QMainWindow):
         fileMenu.addAction(load)
         self.useAutoRefresh = QAction("Auto Refresh", self)
         self.useAutoRefresh.setCheckable(True)
-        self.useAutoRefresh.setChecked(False)
+        self.useAutoRefresh.setChecked(True)
         self.useAutoRefresh.triggered.connect(lambda:self.setAutoRefresh(self.useAutoRefresh.isChecked()))
         fileMenu.addAction(self.useAutoRefresh)
 
