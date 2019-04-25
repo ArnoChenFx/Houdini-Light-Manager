@@ -6,14 +6,16 @@
  same interface or of the interfaces menu are not allowed
  in a single file. -->
   <interface name="ARNO Light Manager" label="ARNO Light Manager" icon="hicon:/SVGIcons.index?BUTTONS_add_light.svg" showNetworkNavigationBar="false" help_url="">
-    <script><![CDATA[import AN_LightManager
-reload(AN_LightManager)
-from AN_LightManager.LightManager import LightMagager 
+    <script><![CDATA[from AN_LightManager import LightManager
+reload(LightManager)
 
 def onCreateInterface():
-    window = LightMagager()
-    return window
-]]></script>
+    global LightWindow
+    LightWindow = LightManager.LightManagerWindow()
+    return LightWindow
+
+def onDestroyInterface():
+    LightWindow.closeEvent()]]></script>
     <includeInToolbarMenu menu_position="411" create_separator="false"/>
     <help><![CDATA[]]></help>
   </interface>
