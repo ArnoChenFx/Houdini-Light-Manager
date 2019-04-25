@@ -12,6 +12,6 @@ AN_LightManager.pypanel --> Documents/houdini17.5/python_panels
 
 
 
-#Update:
+# Update:
 
 	LightManager pannel can refresh automatically
