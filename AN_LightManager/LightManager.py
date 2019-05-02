@@ -26,6 +26,77 @@ class anComboBox(QComboBox):
     def focusInEvent(self, event):
         self.editSignal.emit()
 
+def evalFloat(maxV,slider,slider_value):
+    value = float(slider_value.text())
+
+    if value>maxV and slider.count == 0:
+        slider.count = 1
+        return str(value)
+    else:
+        slider.count = 0
+        return str('%.2f'%(slider.value()/500.0))
+
+def setColorStyle(myColor,color):
+    myColor.setStyleSheet('''
+    QPushButton{
+        background-color: rgb(%s, %s, %s);
+        border: 10px rgb(40,40,40)
+    }
+    QPushButton:pressed{
+        border: 3px solid gray
+    }
+    ''' %(color[0]*255.0,color[1]*255.0,color[2]*255.0))
+
+def setSliderStyle(slider):
+    slider.setStyleSheet('''  
+        QSlider::add-page:Horizontal
+        {     
+            background-color: rgb(87, 97, 106);
+            height:4px;
+        }
+        QSlider::sub-page:Horizontal 
+        {
+            background-color:qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(231,80,229, 255), stop:1 rgba(7,208,255, 255));
+            height:4px;
+        }
+        QSlider::groove:Horizontal 
+        {
+            background:transparent;
+            height:6px;
+        }
+    ''')
+
+def toDigit(textLine):
+    if not textLine.text()[0].isdigit() or not textLine.text()[-1].isdigit():
+        textLine.setText("0")
+        return 0
+    return textLine.text()
+
+def addSlider(minV,maxV):
+    slider = QWidget()
+    slider.setStyleSheet("border: 0px solid red")
+
+    slider_layout = QHBoxLayout()
+    slider_value =  anLineEdit()
+    slider_slider = QSlider(Qt.Horizontal)
+    slider_layout.addWidget(slider_value)
+    slider_layout.addWidget(slider_slider)
+    slider.setLayout(slider_layout)
+
+    slider_slider.count = 0
+    slider_slider.setMinimum(minV*500)
+    slider_slider.setMaximum(maxV*500)
+    slider_slider.valueChanged.connect(lambda: slider_value.setText(evalFloat(maxV,slider_slider,slider_value)))
+    slider_value.editingFinished.connect(lambda: slider_slider.setValue(float(toDigit(slider_value))*500.0))
+    slider_value.editedSignal.connect(lambda: slider_slider.setValue(float(toDigit(slider_value))*500.0))
+
+    slider_value.setMaximumWidth(80)
+    slider_value.setStyleSheet("color:rgb(180,180,180);background-color:rgb(35,35,35)")
+    slider_layout.setMargin(0)
+    setSliderStyle(slider_slider)
+
+    return slider ,slider_value 
+
 class lightItem():
     def __init__(self):
         #super(lightIten,self).__init__()
@@ -67,7 +138,9 @@ class lightItem():
             name = kwargs["parm_tuple"].name()
             if name not in self.lightTable.lightParams:
                 return
+        self._update()
 
+    def _update(self):
         if self.DEBUG:
             print "read light"
         if self.render == "Redshift":
@@ -87,8 +160,8 @@ class lightItem():
         myName = QPushButton()
         myType = QLabel()
         myColor = QPushButton()
-        myInten ,myInten_value = self.lightTable.addSlider(0,10) 
-        myExpose ,myExpose_value = self.lightTable.addSlider(0,2) 
+        myInten ,myInten_value = addSlider(0,10) 
+        myExpose ,myExpose_value = addSlider(0,2) 
         myEnable = QCheckBox()
         myViewport = QCheckBox()
         mySample = QLineEdit()
@@ -212,7 +285,7 @@ class lightItem():
 
         #add color
         if "Color" in self.lightTable.param:
-            self.lightTable.setColorStyle(myColor,color)
+            setColorStyle(myColor,color)
             self.lightTable.setCellWidget(self.index,idx,myColor)
             myColor.clicked.connect(lambda:self.lightTable.setColor(node.parmTuple(color_name),myColor))
             idx += 1
@@ -253,7 +326,7 @@ class lightItem():
             if tp == "Portal" or tp == "Dome" or tp == "Area":
                 mySample.setText(str(sampleValue))
                 self.lightTable.setCellWidget(self.index,idx,mySample)
-                mySample.editingFinished.connect(lambda:node.parm("RSL_samples").set(math.floor(float(self.lightTable.toDigit(mySample)))))
+                mySample.editingFinished.connect(lambda:node.parm("RSL_samples").set(math.floor(float(toDigit(mySample)))))
             idx += 1
 
         #add mode
@@ -266,7 +339,7 @@ class lightItem():
         #add temperature
         if "Temperature" in self.lightTable.param:
             if tpName == "rslight" or tp == "Ies":
-                myTemperature.editingFinished.connect(lambda:node.parm(temperature_name).set(float(self.lightTable.toDigit(myTemperature))))
+                myTemperature.editingFinished.connect(lambda:node.parm(temperature_name).set(float(toDigit(myTemperature))))
                 self.lightTable.setCellWidget(self.index,idx,myTemperature)
             idx += 1
 
@@ -274,14 +347,14 @@ class lightItem():
         if "Volume Contribution" in self.lightTable.param:
             myVC.setText(str(volumeC))
             self.lightTable.setCellWidget(self.index,idx,myVC)
-            myVC.editingFinished.connect(lambda:node.parm("RSL_volumeScale").set(float(self.lightTable.toDigit(myVC))))
+            myVC.editingFinished.connect(lambda:node.parm("RSL_volumeScale").set(float(toDigit(myVC))))
             idx += 1
 
         #add volumeS
         if "Volume Sample" in self.lightTable.param:
             myVS.setText(str(volumeS))
             self.lightTable.setCellWidget(self.index,idx,myVS)
-            myVS.editingFinished.connect(lambda:node.parm("RSL_volumeSamples").set(math.floor(float(self.lightTable.toDigit(myVS)))))
+            myVS.editingFinished.connect(lambda:node.parm("RSL_volumeSamples").set(math.floor(float(toDigit(myVS)))))
             idx += 1
 
         #add group
@@ -317,8 +390,8 @@ class lightItem():
         myName = QPushButton()
         myType = self.lightTable.addCombBox()
         myColor = QPushButton()
-        myInten ,myInten_value = self.lightTable.addSlider(0,10) 
-        myExpose ,myExpose_value = self.lightTable.addSlider(0,10) 
+        myInten ,myInten_value = addSlider(0,10) 
+        myExpose ,myExpose_value = addSlider(0,10) 
         myEnable = QCheckBox()
         myViewport = QCheckBox()
         mySample = QLineEdit()
@@ -357,7 +430,7 @@ class lightItem():
         #add color
         if "Color" in self.lightTable.param:
             color = node.parmTuple("ar_color").eval()
-            self.lightTable.setColorStyle(myColor,color)
+            setColorStyle(myColor,color)
             self.lightTable.setCellWidget(self.index,idx,myColor)
             myColor.clicked.connect(lambda:self.lightTable.setColor(node.parmTuple("ar_color"),myColor))
             idx += 1
@@ -400,7 +473,7 @@ class lightItem():
         if "Samples" in self.lightTable.param:
             mySample.setText(str(node.parm("ar_samples").eval()))
             self.lightTable.setCellWidget(self.index,idx,mySample)
-            mySample.editingFinished.connect(lambda:node.parm("ar_samples").set(math.floor(float(self.lightTable.toDigit(mySample)))))
+            mySample.editingFinished.connect(lambda:node.parm("ar_samples").set(math.floor(float(toDigit(mySample)))))
             idx += 1
 
         #add normalize
@@ -415,7 +488,7 @@ class lightItem():
         if "Volume Sample" in self.lightTable.param:
             myVS.setText(str(node.parm("ar_volume_samples").eval()))
             self.lightTable.setCellWidget(self.index,idx,myVS)
-            myVS.editingFinished.connect(lambda:node.parm("ar_volume_samples").set(math.floor(float(self.lightTable.toDigit(myVS)))))
+            myVS.editingFinished.connect(lambda:node.parm("ar_volume_samples").set(math.floor(float(toDigit(myVS)))))
             idx += 1
 
         #add group
@@ -449,8 +522,8 @@ class lightItem():
         myType = self.lightTable.addCombBox()
         myType2 = QLabel()
         myColor = QPushButton()
-        myInten ,myInten_value = self.lightTable.addSlider(0,10) 
-        myExpose ,myExpose_value = self.lightTable.addSlider(0,2) 
+        myInten ,myInten_value = addSlider(0,10) 
+        myExpose ,myExpose_value = addSlider(0,2) 
         myEnable = QCheckBox()
         myViewport = QCheckBox()
         mySample = QLineEdit()
@@ -503,7 +576,7 @@ class lightItem():
         #add color
         if "Color" in self.lightTable.param:
             color = node.parmTuple("light_color").eval()
-            self.lightTable.setColorStyle(myColor,color)
+            setColorStyle(myColor,color)
             self.lightTable.setCellWidget(self.index,idx,myColor)
             myColor.clicked.connect(lambda:self.lightTable.setColor(node.parmTuple("light_color"),myColor))
             idx += 1
@@ -545,7 +618,7 @@ class lightItem():
             if tp != "ambient":
                 mySample.setText(str(node.parm("vm_samplingquality").eval()))
                 self.lightTable.setCellWidget(self.index,idx,mySample)
-                mySample.editingFinished.connect(lambda:node.parm("vm_samplingquality").set(math.floor(float(self.lightTable.toDigit(mySample)))))
+                mySample.editingFinished.connect(lambda:node.parm("vm_samplingquality").set(math.floor(float(toDigit(mySample)))))
             idx += 1
 
         #add shadow
@@ -553,7 +626,7 @@ class lightItem():
             if tp != "ambient" and tp != "indirectlight":
                 myShadow.setText(str(node.parm("shadow_intensity").eval()))
                 self.lightTable.setCellWidget(self.index,idx,myShadow)
-                myShadow.editingFinished.connect(lambda:node.parm("shadow_intensity").set(math.floor(float(self.lightTable.toDigit(myShadow)))))
+                myShadow.editingFinished.connect(lambda:node.parm("shadow_intensity").set(math.floor(float(toDigit(myShadow)))))
             idx += 1
 
         #add target
@@ -582,7 +655,7 @@ class lightItem():
         myType = self.lightTable.addCombBox()
         myEmissionType = self.lightTable.addCombBox()
         myColor = QPushButton()
-        myInten ,myInten_value = self.lightTable.addSlider(0,10) 
+        myInten ,myInten_value = addSlider(0,10) 
         myEnable = QCheckBox()
         myViewport = QCheckBox()
         mySample = QLineEdit()
@@ -641,7 +714,7 @@ class lightItem():
         #add color
         if "Color" in self.lightTable.param:
             color = node.parmTuple(color_name).eval()
-            self.lightTable.setColorStyle(myColor,color)
+            setColorStyle(myColor,color)
             self.lightTable.setCellWidget(self.index,idx,myColor)
             myColor.clicked.connect(lambda:self.lightTable.setColor(node.parmTuple(color_name),myColor))
             idx += 1
@@ -686,7 +759,7 @@ class lightItem():
             if tp != "octane_toonLight":
                 mySample.setText(str(node.parm(sample_name).eval()))
                 self.lightTable.setCellWidget(self.index,idx,mySample)
-                mySample.editingFinished.connect(lambda:node.parm(sample_name).set(math.floor(float(self.lightTable.toDigit(mySample)))))
+                mySample.editingFinished.connect(lambda:node.parm(sample_name).set(math.floor(float(toDigit(mySample)))))
             idx += 1
 
         #add visibality
@@ -694,7 +767,7 @@ class lightItem():
             if tp != "octane_toonLight":
                 myVis.setText(str(node.parm("octane_objprop_generalVis").eval()))
                 self.lightTable.setCellWidget(self.index,idx,myVis)
-                myVis.editingFinished.connect(lambda:node.parm("octane_objprop_generalVis").set(float(self.lightTable.toDigit(myVis))))
+                myVis.editingFinished.connect(lambda:node.parm("octane_objprop_generalVis").set(float(toDigit(myVis))))
             idx += 1
 
         #add temperature
@@ -702,7 +775,7 @@ class lightItem():
             if tp != "octane_toonLight" and node.parm("switch").eval() == 0:
                 myTemperature.setText(str(node.parm("NT_EMIS_BLACKBODY1_temperature").eval()))
                 self.lightTable.setCellWidget(self.index,idx,myTemperature)
-                myTemperature.editingFinished.connect(lambda:node.parm("NT_EMIS_BLACKBODY1_temperature").set(math.floor(float(self.lightTable.toDigit(myTemperature)))))
+                myTemperature.editingFinished.connect(lambda:node.parm("NT_EMIS_BLACKBODY1_temperature").set(math.floor(float(toDigit(myTemperature)))))
             idx += 1
 
         #add target
@@ -912,31 +985,6 @@ class lightTable(QTableWidget):
         "NT_MAT_DIFFUSE1_diffuse","NT_EMIS_TEXTURE1_power","NT_EMIS_TEXTURE1_sampling_rate","light_enable","ogl_enablelight",
         "switch","octane_objprop_generalVis","NT_EMIS_BLACKBODY1_temperature","lookatpath","lookup"]
 
-    def addSlider(self,minV,maxV):
-        slider = QWidget()
-        slider.setStyleSheet("border: 0px solid red")
-
-        slider_layout = QHBoxLayout()
-        slider_value =  anLineEdit()
-        slider_slider = QSlider(Qt.Horizontal)
-        slider_layout.addWidget(slider_value)
-        slider_layout.addWidget(slider_slider)
-        slider.setLayout(slider_layout)
-
-        slider_slider.count = 0
-        slider_slider.setMinimum(minV*500)
-        slider_slider.setMaximum(maxV*500)
-        slider_slider.valueChanged.connect(lambda: slider_value.setText(self.evalFloat(maxV,slider_slider,slider_value)))
-        slider_value.editingFinished.connect(lambda: slider_slider.setValue(float(self.toDigit(slider_value))*500.0))
-        slider_value.editedSignal.connect(lambda: slider_slider.setValue(float(self.toDigit(slider_value))*500.0))
-
-        slider_value.setMaximumWidth(80)
-        slider_value.setStyleSheet("color:rgb(180,180,180);background-color:rgb(35,35,35)")
-        slider_layout.setMargin(0)
-        self.setSliderStyle(slider_slider)
-
-        return slider ,slider_value 
-
     def addCombBox(self,names=[]):
         combBox = anComboBox()
         combBox.setStyleSheet("QComboBox{border:0.5px solid gray;}"
@@ -954,52 +1002,6 @@ class lightTable(QTableWidget):
         else:
             self.enterEditMode.emit()
         self.useLeave = state
-
-    def evalFloat(self,maxV,slider,slider_value):
-        value = float(slider_value.text())
-
-        if value>maxV and slider.count == 0:
-            slider.count = 1
-            return str(value)
-        else:
-            slider.count = 0
-            return str('%.2f'%(slider.value()/500.0))
-
-    def setColorStyle(self,myColor,color):
-        myColor.setStyleSheet('''
-        QPushButton{
-            background-color: rgb(%s, %s, %s);
-            border: 10px rgb(40,40,40)
-        }
-        QPushButton:pressed{
-            border: 3px solid gray
-        }
-        ''' %(color[0]*255.0,color[1]*255.0,color[2]*255.0))
-
-    def toDigit(self,textLine):
-        if not textLine.text()[0].isdigit() or not textLine.text()[-1].isdigit():
-            textLine.setText("0")
-            return 0
-        return textLine.text()
-
-    def setSliderStyle(self,slider):
-        slider.setStyleSheet('''  
-            QSlider::add-page:Horizontal
-            {     
-                background-color: rgb(87, 97, 106);
-                height:4px;
-            }
-            QSlider::sub-page:Horizontal 
-            {
-                background-color:qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(231,80,229, 255), stop:1 rgba(7,208,255, 255));
-                height:4px;
-            }
-            QSlider::groove:Horizontal 
-            {
-                background:transparent;
-                height:6px;
-            }
-        ''')
 
     def setStyle(self):
         self.setStyleSheet('''
@@ -1029,7 +1031,7 @@ class lightTable(QTableWidget):
         if col:
             col = col.rgb()
             parm.set(col)
-            self.setColorStyle(myColor,col)
+            setColorStyle(myColor,col)
             #self.parent.update()
         self.setLeave(True)
 
@@ -1204,6 +1206,7 @@ class LightManagerWindow(QMainWindow):
         self.useAutoRefresh.setChecked(True)
         self.useAutoRefresh.triggered.connect(lambda:self.setAutoRefresh(self.useAutoRefresh.isChecked()))
         fileMenu.addAction(self.useAutoRefresh)
+        self.useAutoRefresh.setVisible(False)
 
         renderMenu = self.MenuBar.addMenu('Renderer')
         self.useRSAction = self.addAction("Redshift",renderMenu)
@@ -1299,12 +1302,16 @@ class LightManagerWindow(QMainWindow):
                 info = json.loads(f.read())
                 self.useRS = info["useRS"]
                 self.useRSAction.setChecked(self.useRS)
+                self.rsDock.setVisible(self.useRS)
                 self.useAR = info["useAR"]
                 self.useARAction.setChecked(self.useAR)
+                self.arDock.setVisible(self.useAR)
                 self.useMR = info["useMR"]
                 self.useMRAction.setChecked(self.useMR)
+                self.mrDock.setVisible(self.useMR)
                 self.useOR = info["useOR"]
                 self.useORAction.setChecked(self.useOR)
+                self.orDock.setVisible(self.useOR)
 
                 self.currentRsParams = info["Redshift"]
                 self.currentArParams = info["Arnold"]
@@ -1355,7 +1362,7 @@ class LightManagerWindow(QMainWindow):
             self.rsDock.setFeatures(QDockWidget.DockWidgetClosable)
             self.mrDock.setFeatures(QDockWidget.DockWidgetClosable)
             self.orDock.setFeatures(QDockWidget.DockWidgetClosable)
-            print state
+            #print state
             self.timer.start(100,self)
             
         else:
