@@ -1273,7 +1273,7 @@ class LightManagerWindow(QMainWindow):
                     act.setChecked(True)
 
     def onSave(self):
-        file = hou.getenv("temp")+"/AN_LightManager.json"
+        file = hou.getenv("HOUDINI_USER_PREF_DIR")+"/AN_LightManager.json"
 
         info = {}
         info["useRS"] = self.useRS
@@ -1291,7 +1291,7 @@ class LightManagerWindow(QMainWindow):
             print "Save Successfully!"
 
     def onLoad(self):
-        file = hou.getenv("temp")+"/AN_LightManager.json"
+        file = hou.getenv("HOUDINI_USER_PREF_DIR")+"/AN_LightManager.json"
 
         if not os.path.exists(file):
             #print "Preference file dose not exist!"
