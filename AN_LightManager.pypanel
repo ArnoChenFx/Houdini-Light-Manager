@@ -12,6 +12,8 @@ reload(LightManager)
 def onCreateInterface():
     global LightWindow
     LightWindow = LightManager.LightManagerWindow()
+    LightWindow.setStyleSheet(hou.qt.styleSheet())
+    LightWindow.setProperty("houdiniStyle",True)
     return LightWindow
 
 def onDestroyInterface():
