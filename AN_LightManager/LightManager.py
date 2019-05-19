@@ -107,18 +107,20 @@ class lightItem():
         self.updataMode = True
         self.size = 23
         self.DEBUG = False
+        self.path = None
 
     def link(self):
         if self.node:
             self.node.addEventCallback((hou.nodeEventType.ParmTupleChanged,), self.update)
-            self.node.addEventCallback((hou.nodeEventType.BeingDeleted,), self.onDelete)
+            #self.node.addEventCallback((hou.nodeEventType.BeingDeleted,), self.onDelete)
             self.update(None)
 
     def disLink(self):
+        return
         if self.node:
             try:
                 self.node.removeEventCallback((hou.nodeEventType.ParmTupleChanged,), self.update)
-                self.node.removeEventCallback((hou.nodeEventType.BeingDeleted,), self.onDelete)
+                #self.node.removeEventCallback((hou.nodeEventType.BeingDeleted,), self.onDelete)
                 if self.DEBUG:
                     print "remove link"
             except:
@@ -129,6 +131,10 @@ class lightItem():
 
     def onDelete(self,**kwargs):
         self.disLink()
+
+    def setNode(self,node):
+        self.node = node
+        self.path = node.path()
 
     def update(self,event_type,**kwargs):
         if self.lightTable.parent.useLoop  != True or self.lightTable.parent.stopLoop == True:
@@ -152,10 +158,17 @@ class lightItem():
         elif self.render == "Octane":
             self.readOR()
 
+    def check(self):
+        if hou.node(self.path) == None:
+            return False
+        return True
+
     def readRS(self):
+        if not self.check():
+            return
+
         node = self.node
         tpName = node.type().name()
-        
         myIcon = QLabel()
         myName = QPushButton()
         myType = QLabel()
@@ -385,6 +398,9 @@ class lightItem():
                 self.lightTable.setCellWidget(self.index,idx,myUp)
 
     def readAR(self):
+        if not self.check():
+            return
+            
         node = self.node
         myIcon = QLabel()
         myName = QPushButton()
@@ -515,8 +531,9 @@ class lightItem():
             self.lightTable.setCellWidget(self.index,idx,myUp)
 
     def readMR(self):
+        if not self.check():
+            return
         node = self.node
-
         myIcon = QLabel()
         myName = QPushButton()
         myType = self.lightTable.addCombBox()
@@ -649,6 +666,8 @@ class lightItem():
                 self.lightTable.setCellWidget(self.index,idx,myUp)
 
     def readOR(self):
+        if not self.check():
+            return
         node = self.node
         myIcon = QLabel()
         myName = QPushButton()
@@ -1004,6 +1023,8 @@ class lightTable(QTableWidget):
         self.useLeave = state
 
     def setStyle(self):
+        self.setStyleSheet(hou.qt.styleSheet())
+        self.setProperty("houdiniStyle",True)
         self.setStyleSheet('''
         QPushButton{
             color:rgb(180,180,180);
@@ -1023,6 +1044,7 @@ class lightTable(QTableWidget):
             font : 13px
         }
         ''')
+        
 
     def setColor(self,parm,myColor):
         self.setLeave(False)
@@ -1057,7 +1079,7 @@ class lightTable(QTableWidget):
 
         light = lightItem()
         light.index = count
-        light.node = node
+        light.setNode(node)
         light.lightTable = self
         light.render = self.render
         light.link()
@@ -1068,6 +1090,7 @@ class lightTable(QTableWidget):
         self.vbarValue = self.verticalScrollBar().value()
         #height = self.height()
         #width = self.width()
+        self.lightItems = []
 
         self.parent.useLoop = True
         
@@ -1147,7 +1170,8 @@ class LightManagerWindow(QMainWindow):
         self.time = 0
 
     def setStyle(self):
-        self.setStyleSheet("border:0px;")
+        self.setProperty("houdiniStyle",True)
+        self.setStyleSheet(hou.qt.styleSheet())
 
     def initUI(self):
         self.widget = QWidget()
